@@ -69,8 +69,14 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   }
 
   const handleLogout = () => {
-    logout()
-    router.push("/")
+    try {
+      logout()
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+      // Force navigation even if logout fails
+      router.push("/")
+    }
   }
 
   return (
@@ -146,7 +152,14 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
                 Notifications
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-red-600 cursor-pointer focus:text-red-600"
+                onSelect={(event) => {
+                  event.preventDefault()
+                  handleLogout()
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>

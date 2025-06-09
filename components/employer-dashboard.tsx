@@ -28,9 +28,11 @@ import {
   Target,
   Award,
 } from "lucide-react"
+import { useRouter } from "next/navigation" // Import useRouter
 
 export default function EmployerDashboard() {
   const { user } = useAuth()
+  const router = useRouter() // Initialize useRouter
   const [activeTab, setActiveTab] = useState("overview")
 
   // Company Profile State
@@ -176,7 +178,7 @@ export default function EmployerDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Employer Dashboard</h1>
               <p className="text-gray-600">Manage your job postings and find the right workers</p>
             </div>
-            <Button className="bg-blue-500 hover:bg-blue-600">
+            <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => router.push("/post-job")}>
               <Plus className="h-4 w-4 mr-2" />
               Post New Job
             </Button>
@@ -394,7 +396,7 @@ export default function EmployerDashboard() {
                 <h2 className="text-2xl font-bold">Job Postings</h2>
                 <p className="text-gray-600">Manage your active and past job postings</p>
               </div>
-              <Button className="bg-blue-500 hover:bg-blue-600">
+              <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => router.push("/post-job")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Post a New Job
               </Button>

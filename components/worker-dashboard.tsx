@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Briefcase, Clock, DollarSign, MapPin, Star, CheckCircle, XCircle, Eye, Calendar, Award } from "lucide-react"
+import Link from "next/link" // Import Link
 
 export default function WorkerDashboard() {
   const { user } = useAuth()
@@ -235,7 +236,9 @@ export default function WorkerDashboard() {
               <h2 className="text-2xl font-bold text-gray-900">Auto-Matched Jobs</h2>
               <p className="text-gray-600">Jobs that match your skills and preferences</p>
             </div>
-            <Button variant="outline">View All Jobs</Button>
+            <Button variant="outline" asChild>
+              <Link href="/jobs">View All Jobs</Link>
+            </Button>
           </div>
 
           <div className="space-y-6">
@@ -276,8 +279,12 @@ export default function WorkerDashboard() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button className="bg-blue-500 hover:bg-blue-600">Apply Now</Button>
-                    <Button variant="outline">View Details</Button>
+                    <Button className="bg-blue-500 hover:bg-blue-600" asChild>
+                      <Link href={`/jobs/${job.id}/apply`}>Apply Now</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href={`/jobs/${job.id}`}>View Details</Link>
+                    </Button>
                     <Button variant="outline">Save Job</Button>
                   </div>
                 </CardContent>
