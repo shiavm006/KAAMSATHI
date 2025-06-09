@@ -30,7 +30,7 @@ const contentConfig: ContentConfig = {
     loginTitle: "Employer Login/Signup",
     heroTitle: "Find skilled local workers",
     heroSubtitle: "Connect with verified workers in your area for daily wage jobs.",
-    backgroundImage: "/images/local-workers.png",
+    backgroundImage: "/images/diverse-professionals.png", // Updated image for employers
     stats: [
       { icon: Footprints, number: "3", label: "easy steps", color: "bg-orange-100", iconColor: "text-orange-500" },
       { icon: Users, number: "50K+", label: "local workers", color: "bg-blue-100", iconColor: "text-blue-500" },
@@ -44,7 +44,7 @@ const contentConfig: ContentConfig = {
     loginTitle: "Worker Login/Signup",
     heroTitle: "Find daily wage work near you",
     heroSubtitle: "Discover local job opportunities that match your skills.",
-    backgroundImage: "/images/construction-workers.png", // Using the other image for workers
+    backgroundImage: "/images/sewing-factory.png", // Using the other image for workers
     stats: [
       { icon: Footprints, number: "3", label: "easy steps", color: "bg-orange-100", iconColor: "text-orange-500" },
       { icon: Briefcase, number: "25K+", label: "daily jobs", color: "bg-blue-100", iconColor: "text-blue-500" },
