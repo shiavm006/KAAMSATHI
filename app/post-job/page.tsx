@@ -109,11 +109,28 @@ export default function PostJobPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Basic Validation
-    if (!formData.title || !formData.location || !formData.description) {
+
+    // Enhanced Validation
+    const errors = []
+    if (!formData.title.trim()) errors.push("Job Title is required.")
+    if (!formData.location.trim()) errors.push("Location is required.")
+    if (!formData.description.trim()) errors.push("Job Description is required.")
+    if (formData.salaryMin && isNaN(Number(formData.salaryMin))) errors.push("Minimum Salary must be a number.")
+    if (formData.salaryMax && isNaN(Number(formData.salaryMax))) errors.push("Maximum Salary must be a number.")
+    if (formData.salaryMin && formData.salaryMax && Number(formData.salaryMin) > Number(formData.salaryMax)) {
+      errors.push("Maximum Salary must be greater than Minimum Salary.")
+    }
+
+    if (errors.length > 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields (Title, Location, Description).",
+        title: "Validation Error",
+        description: (
+          <ul className="list-disc pl-5">
+            {errors.map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+          </ul>
+        ),
         variant: "destructive",
       })
       return

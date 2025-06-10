@@ -3,8 +3,8 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import WorkerDashboard from "@/components/worker-dashboard"
-import EmployerDashboard from "@/components/employer-dashboard"
+import WorkerDashboard from "@/components/dashboard/worker-dashboard"
+import EmployerDashboard from "@/components/dashboard/employer-dashboard"
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth()

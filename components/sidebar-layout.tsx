@@ -39,6 +39,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false)
 
   if (!user) return null
 
@@ -69,14 +70,9 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   }
 
   const handleLogout = () => {
-    try {
-      logout()
-      router.push("/")
-    } catch (error) {
-      console.error("Logout error:", error)
-      // Force navigation even if logout fails
-      router.push("/")
-    }
+    console.log("SidebarLayout: handleLogout called")
+    logout()
+    router.push("/")
   }
 
   return (
@@ -132,9 +128,13 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-gray-200">
-          <DropdownMenu>
+          <DropdownMenu open={isSettingsDropdownOpen} onOpenChange={setIsSettingsDropdownOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between">
+              <Button
+                variant="ghost"
+                className="w-full justify-between"
+                onClick={() => setIsSettingsDropdownOpen((prev) => !prev)} // Explicitly toggle state on click
+              >
                 <span className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
                   Settings
@@ -143,22 +143,21 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsSettingsDropdownOpen(false)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Account Settings
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsSettingsDropdownOpen(false)}>
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleLogout}
-                className="text-red-600 cursor-pointer focus:text-red-600"
-                onSelect={(event) => {
-                  event.preventDefault()
+                onClick={() => {
                   handleLogout()
+                  setIsSettingsDropdownOpen(false) // Close dropdown on logout
                 }}
+                className="text-red-600 cursor-pointer focus:text-red-600"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out

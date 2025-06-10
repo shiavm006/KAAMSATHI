@@ -1,124 +1,128 @@
 "use client"
 
 import type React from "react"
-
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
 interface User {
   id: string
   name: string
   phone: string
   role: "worker" | "employer"
+  avatar?: string
+  email?: string
+  skills?: string[]
+  location?: string
 }
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
-  login: (user: User) => void
-  logout: () => void
-  verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; user?: User; error?: string }>
+  loading: boolean
   sendOTP: (phone: string) => Promise<{ success: boolean; error?: string }>
+  verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; user?: User; error?: string }>
+  logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Mock user data for demonstration
-const MOCK_USERS = [
+// MOCK USER DATA - In a real app, this would come from a database.
+const MOCK_USERS: User[] = [
   {
-    id: "user1",
+    id: "user-worker-1",
     name: "Rajesh Kumar",
     phone: "9876543210",
     role: "worker",
+    avatar: "/placeholder-user.jpg",
+    email: "rajesh.k@example.com",
+    skills: ["Construction", "Plumbing", "Painting"],
+    location: "Mumbai",
   },
   {
-    id: "user2",
+    id: "user-employer-1",
     name: "Priya Sharma",
     phone: "9876543211",
     role: "employer",
+    avatar: "/placeholder-user.jpg",
+    email: "priya.s@example.com",
+    location: "Mumbai",
   },
 ]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem("kaamsathi-user")
-    if (savedUser) {
-      const userData = JSON.parse(savedUser)
-      setUser(userData)
-      setIsAuthenticated(true)
+    try {
+      const savedUser = localStorage.getItem("kaamsathi-user")
+      if (savedUser) {
+        setUser(JSON.parse(savedUser))
+      }
+    } catch (error) {
+      console.error("AuthProvider: Failed to parse user from localStorage", error)
+      localStorage.removeItem("kaamsathi-user")
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  const login = (userData: User) => {
+  const login = useCallback((userData: User) => {
     setUser(userData)
-    setIsAuthenticated(true)
     localStorage.setItem("kaamsathi-user", JSON.stringify(userData))
-  }
+    console.log("AuthProvider: User logged in", userData)
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    console.log("AuthProvider: logout() called.")
     setUser(null)
-    setIsAuthenticated(false)
     localStorage.removeItem("kaamsathi-user")
     localStorage.removeItem("kaamsathi-user-intent")
+    console.log("AuthProvider: User logged out. localStorage cleared.")
+  }, [])
+
+  const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
+    console.log(`AuthProvider: Sending OTP to ${phone}...`)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+      return { success: false, error: "Please enter a valid 10-digit phone number." }
+    }
+    console.log(`AuthProvider: Demo OTP for ${phone} is 123456.`)
+    return { success: true }
   }
 
-  // Mock OTP verification - now handles 6-digit OTP
   const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; user?: User; error?: string }> => {
-    // Simulate API delay
+    console.log(`AuthProvider: Verifying OTP ${otp} for phone ${phone}...`)
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // For demo purposes, accept 123456 or any 6-digit OTP
-    if (otp.length !== 6) {
-      return { success: false, error: "Invalid OTP. Please enter a 6-digit code." }
-    }
-
-    // Demo OTP is 123456, but accept any 6-digit code for testing
-    if (otp !== "123456" && !/^\d{6}$/.test(otp)) {
+    if (otp !== "123456") {
       return { success: false, error: "Invalid OTP. Use demo OTP: 123456" }
     }
 
-    // Find user by phone number
     const foundUser = MOCK_USERS.find((u) => u.phone === phone)
 
     if (foundUser) {
-      // Existing user
+      console.log("AuthProvider: Existing user found.")
       login(foundUser)
       return { success: true, user: foundUser }
     } else {
-      // Create a new user with a deterministic role for demo
-      const lastDigit = Number.parseInt(phone.slice(-1), 10)
-      const newUserRole = lastDigit % 2 === 0 ? "worker" : "employer"
-      const newUser = {
-        id: `user${Date.now()}`,
-        name: `New User ${phone.slice(-4)}`, // Differentiate name for clarity
+      console.log("AuthProvider: No existing user. Creating new user.")
+      const intent = localStorage.getItem("kaamsathi-user-intent") || "worker"
+      const newUser: User = {
+        id: `user-new-${Date.now()}`,
+        name: `New User ${phone.slice(-4)}`,
         phone,
-        role: newUserRole as "worker" | "employer",
+        role: intent as "worker" | "employer",
+        avatar: "/placeholder-user.jpg",
       }
       login(newUser)
       return { success: true, user: newUser }
     }
   }
 
-  // Mock send OTP - in a real app, this would call an API
-  const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Validate phone number (simple validation for demo)
-    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
-      return { success: false, error: "Please enter a valid 10-digit phone number" }
-    }
-
-    // In a real app, this would send an actual OTP
-    console.log(`OTP sent to ${phone}: 123456`)
-    return { success: true }
-  }
+  const isAuthenticated = !loading && !!user
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, verifyOTP, sendOTP }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, sendOTP, verifyOTP, logout }}>
       {children}
     </AuthContext.Provider>
   )
