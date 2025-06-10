@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Eye, Edit, Trash2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 // Mock data would ideally be moved to a central file like `data/mock-data.ts`
 const jobPostings = [
@@ -25,6 +26,7 @@ const jobPostings = [
 export default function EmployerDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
+  const { toast } = useToast()
 
   return (
     <SidebarLayout>
@@ -89,13 +91,28 @@ export default function EmployerDashboard() {
                         <TableCell>{job.applications}</TableCell>
                         <TableCell>{job.postedDate}</TableCell>
                         <TableCell className="flex gap-2">
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toast({ title: "Viewing Job", description: job.title })}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toast({ title: "Editing Job", description: job.title })}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500"
+                            onClick={() =>
+                              toast({ title: "Deleting Job", description: job.title, variant: "destructive" })
+                            }
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>

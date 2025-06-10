@@ -39,7 +39,6 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false)
 
   if (!user) return null
 
@@ -128,12 +127,12 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-gray-200">
-          <DropdownMenu open={isSettingsDropdownOpen} onOpenChange={setIsSettingsDropdownOpen}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className="w-full justify-between"
-                onClick={() => setIsSettingsDropdownOpen((prev) => !prev)} // Explicitly toggle state on click
+                // Removed explicit onClick here, relying on DropdownMenuTrigger
               >
                 <span className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
@@ -143,27 +142,29 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setIsSettingsDropdownOpen(false)}>
+              <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 Account Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsSettingsDropdownOpen(false)}>
+              <DropdownMenuItem>
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  handleLogout()
-                  setIsSettingsDropdownOpen(false) // Close dropdown on logout
-                }}
-                className="text-red-600 cursor-pointer focus:text-red-600"
-              >
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Log out
+          </Button>
         </div>
       </div>
 

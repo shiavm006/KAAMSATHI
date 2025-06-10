@@ -3,15 +3,23 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-interface User {
+export interface User {
+  // Exporting User interface
   id: string
   name: string
   phone: string
   role: "worker" | "employer"
   avatar?: string
   email?: string
-  skills?: string[]
   location?: string
+  // Worker specific
+  skills?: string[]
+  bio?: string
+  experience?: string // e.g., "2 years", "5+ years"
+  // Employer specific
+  companyName?: string
+  companyWebsite?: string
+  companyDescription?: string
 }
 
 interface AuthContextType {
@@ -20,12 +28,12 @@ interface AuthContextType {
   loading: boolean
   sendOTP: (phone: string) => Promise<{ success: boolean; error?: string }>
   verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; user?: User; error?: string }>
+  updateUser: (updatedUserData: Partial<User>) => void // Add updateUser
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// MOCK USER DATA - In a real app, this would come from a database.
 const MOCK_USERS: User[] = [
   {
     id: "user-worker-1",
@@ -35,7 +43,9 @@ const MOCK_USERS: User[] = [
     avatar: "/placeholder-user.jpg",
     email: "rajesh.k@example.com",
     skills: ["Construction", "Plumbing", "Painting"],
-    location: "Mumbai",
+    location: "Mumbai, Maharashtra",
+    bio: "Hardworking and reliable construction worker with 5 years of experience in residential and commercial projects. Proficient in plumbing and painting.",
+    experience: "5 years",
   },
   {
     id: "user-employer-1",
@@ -44,7 +54,11 @@ const MOCK_USERS: User[] = [
     role: "employer",
     avatar: "/placeholder-user.jpg",
     email: "priya.s@example.com",
-    location: "Mumbai",
+    location: "Delhi, NCR",
+    companyName: "BuildWell Constructions",
+    companyWebsite: "https://buildwell.example.com",
+    companyDescription:
+      "Leading construction firm specializing in sustainable building practices. We are always looking for skilled workers to join our team.",
   },
 ]
 
@@ -80,6 +94,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("AuthProvider: User logged out. localStorage cleared.")
   }, [])
 
+  const updateUser = useCallback(
+    (updatedUserData: Partial<User>) => {
+      if (user) {
+        const newUser = { ...user, ...updatedUserData }
+        setUser(newUser)
+        localStorage.setItem("kaamsathi-user", JSON.stringify(newUser))
+        console.log("AuthProvider: User data updated", newUser)
+      }
+    },
+    [user],
+  )
+
   const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     console.log(`AuthProvider: Sending OTP to ${phone}...`)
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -107,12 +133,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       console.log("AuthProvider: No existing user. Creating new user.")
       const intent = localStorage.getItem("kaamsathi-user-intent") || "worker"
+      const newUserRole = intent as "worker" | "employer"
+
+      // Provide default values for new fields based on role
       const newUser: User = {
         id: `user-new-${Date.now()}`,
         name: `New User ${phone.slice(-4)}`,
         phone,
-        role: intent as "worker" | "employer",
+        role: newUserRole,
         avatar: "/placeholder-user.jpg",
+        email: "",
+        location: "",
+        ...(newUserRole === "worker" && { skills: [], bio: "", experience: "" }),
+        ...(newUserRole === "employer" && { companyName: "", companyWebsite: "", companyDescription: "" }),
       }
       login(newUser)
       return { success: true, user: newUser }
@@ -122,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !loading && !!user
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, sendOTP, verifyOTP, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, sendOTP, verifyOTP, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   )

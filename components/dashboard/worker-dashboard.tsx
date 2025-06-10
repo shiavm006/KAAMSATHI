@@ -9,9 +9,11 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Briefcase, Clock, DollarSign, MapPin, Star, CheckCircle, XCircle, Eye, Calendar, Award } from "lucide-react"
 import Link from "next/link" // Import Link
+import { useToast } from "@/components/ui/use-toast"
 
 export default function WorkerDashboard() {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   // Worker-specific stats
   const workerStats = {
@@ -285,7 +287,14 @@ export default function WorkerDashboard() {
                     <Button variant="outline" asChild>
                       <Link href={`/jobs/${job.id}`}>View Details</Link>
                     </Button>
-                    <Button variant="outline">Save Job</Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        toast({ title: "Job Saved!", description: `${job.title} has been saved to your list.` })
+                      }
+                    >
+                      Save Job
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -372,9 +381,11 @@ export default function WorkerDashboard() {
                       <span className="text-sm">Portfolio Missing</span>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full">
-                    Complete Profile
-                  </Button>
+                  <Link href="/profile" className="w-full">
+                    <Button variant="outline" className="w-full">
+                      Complete Profile
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -460,7 +471,13 @@ export default function WorkerDashboard() {
                       <Badge variant="secondary">Pending</Badge>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() =>
+                      toast({ title: "Feature Coming Soon!", description: "You'll be able to add new skills here." })
+                    }
+                  >
                     Add New Skill
                   </Button>
                 </div>

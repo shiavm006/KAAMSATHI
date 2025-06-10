@@ -10,19 +10,17 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "KaamSathi - Find Local Workers & Jobs",
   description: "Connect with local workers and find daily wage jobs in your area",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )
