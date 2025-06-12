@@ -4,10 +4,9 @@ import SidebarLayout from "@/components/sidebar-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Briefcase, Clock, DollarSign, MapPin, Star, CheckCircle, XCircle, Eye, Calendar, Award } from "lucide-react"
+import { Briefcase, Clock, DollarSign, MapPin, Star, CheckCircle, Eye, Calendar, Award } from "lucide-react"
 import Link from "next/link" // Import Link
 import { useToast } from "@/components/ui/use-toast"
 
@@ -146,7 +145,8 @@ export default function WorkerDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-4 border-blue-500">
-                    <AvatarFallback className="bg-blue-500 text-white text-xl font-bold">
+                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                    <AvatarFallback className="bg-blue-600 text-white text-xl font-bold">
                       {user?.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -189,7 +189,7 @@ export default function WorkerDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <Briefcase className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{workerStats.totalApplications}</div>
@@ -200,7 +200,7 @@ export default function WorkerDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{workerStats.activeApplications}</div>
@@ -211,7 +211,7 @@ export default function WorkerDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">₹{workerStats.totalEarnings.toLocaleString()}</div>
@@ -222,7 +222,7 @@ export default function WorkerDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
+              <Eye className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{workerStats.profileViews}</div>
@@ -281,7 +281,7 @@ export default function WorkerDashboard() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button className="bg-blue-500 hover:bg-blue-600" asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
                       <Link href={`/jobs/${job.id}/apply`}>Apply Now</Link>
                     </Button>
                     <Button variant="outline" asChild>
@@ -324,168 +324,4 @@ export default function WorkerDashboard() {
                       <div className="flex-1">
                         <h3 className="font-medium">{application.jobTitle}</h3>
                         <p className="text-sm text-gray-500">{application.company}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {application.location}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            {application.salary}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Applied: {application.appliedDate}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(application.status)}>
-                          <span className="capitalize">{application.status.replace("_", " ")}</span>
-                        </Badge>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Completion</CardTitle>
-                <CardDescription>Complete your profile to get better job matches</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span>Profile Completion</span>
-                    <span className="text-sm font-medium">{workerStats.profileCompletion}%</span>
-                  </div>
-                  <Progress value={workerStats.profileCompletion} className="w-full" />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Basic Information</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Skills Added</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-red-500" />
-                      <span className="text-sm">Portfolio Missing</span>
-                    </div>
-                  </div>
-                  <Link href="/profile" className="w-full">
-                    <Button variant="outline" className="w-full">
-                      Complete Profile
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="history" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Work History</CardTitle>
-                <CardDescription>Your completed jobs and earnings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {workHistory.map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <h3 className="font-medium">{job.title}</h3>
-                        <p className="text-sm text-gray-500">{job.company}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Completed: {job.completedDate}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Duration: {job.duration}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-green-600">{job.earnings}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < job.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                          <span className="text-xs text-gray-500 ml-1">({job.rating})</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="skills" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Skills & Certifications</CardTitle>
-                <CardDescription>Manage your skills and get verified</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Landscaping</span>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      </div>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Verified
-                      </Badge>
-                    </div>
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Event Setup</span>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      </div>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Verified
-                      </Badge>
-                    </div>
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Warehouse</span>
-                        <XCircle className="h-4 w-4 text-gray-400" />
-                      </div>
-                      <Badge variant="secondary">Pending</Badge>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      toast({ title: "Feature Coming Soon!", description: "You'll be able to add new skills here." })
-                    }
-                  >
-                    Add New Skill
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </SidebarLayout>
-  )
-}
+                        <div className="flex items-center gap-\

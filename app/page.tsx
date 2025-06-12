@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Phone, Loader2, Shield, Mail, MapPinIcon } from "lucide-react"
 import UserIntentModal from "@/components/user-intent-modal"
 import { toast } from "@/components/ui/use-toast"
-import contentConfig from "@/config/contentConfig" // This import should now work
+import contentConfig from "@/config/contentConfig"
+import TestimonialsCarousel from "@/components/testimonials-carousel"
 
 export default function Home() {
   const { isAuthenticated, user, sendOTP, verifyOTP } = useAuth()
@@ -251,7 +252,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Redirecting to dashboard...</p>
         </div>
       </div>
@@ -263,7 +264,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading KaamSathi...</p>
         </div>
       </div>
@@ -273,40 +274,44 @@ export default function Home() {
   const config = contentConfig[userIntent || "hire"]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       {/* User Intent Modal */}
       <UserIntentModal isOpen={showIntentModal} onClose={handleCloseModal} onSelect={handleIntentSelection} />
 
-      {/* Header - Restored with proper navigation */}
-      <header className="bg-white border-b sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">K</span>
+      {/* Header with Glass Effect - Fixed responsive issues */}
+      <header className="backdrop-blur-md bg-white/70 border-b border-white/20 sticky top-0 z-40 shadow-sm">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Logo - Responsive sizing */}
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="h-6 w-6 sm:h-8 sm:w-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-sm sm:text-lg">K</span>
               </div>
-              <span className="font-bold text-xl text-gray-900">KaamSathi</span>
+              <span className="font-bold text-lg sm:text-xl text-gray-900 hidden xs:block">KaamSathi</span>
             </Link>
 
-            {/* Right side buttons - Restored the missing text */}
-            <div className="flex items-center space-x-4">
-              <a href={config.headerLink} className="text-blue-600 hover:text-blue-700 font-medium hidden sm:block">
+            {/* Right side buttons - Responsive */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <a
+                href={config.headerLink}
+                className="text-blue-600 hover:text-blue-700 font-medium hidden md:block transition-colors text-sm"
+              >
                 {config.headerText} →
               </a>
               <Button
                 onClick={handleChangeIntent}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6"
+                className="bg-blue-600/90 hover:bg-blue-700 text-white px-3 sm:px-4 lg:px-6 text-xs sm:text-sm shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
               >
-                {userIntent === "hire" ? "Worker Login" : "Employer Login"}
+                <span className="hidden sm:inline">{userIntent === "hire" ? "Worker Login" : "Employer Login"}</span>
+                <span className="sm:hidden">{userIntent === "hire" ? "Worker" : "Employer"}</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section - Improved responsive design */}
-      <section className="relative min-h-[600px] sm:min-h-[700px] lg:min-h-[800px] flex items-center">
+      {/* Hero Section - Fixed responsive layout */}
+      <section className="relative min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] xl:min-h-[800px] flex items-center">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -319,20 +324,22 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[500px] sm:min-h-[600px]">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
             {/* Left side - Hero content */}
-            <div className="text-white order-2 lg:order-1">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+            <div className="text-white order-2 lg:order-1 text-center lg:text-left">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
                 {config.heroTitle}
               </h1>
-              <p className="text-lg sm:text-xl lg:text-2xl mb-6 sm:mb-8 text-gray-200">{config.heroSubtitle}</p>
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-gray-200 max-w-2xl mx-auto lg:mx-0">
+                {config.heroSubtitle}
+              </p>
             </div>
 
-            {/* Right side - Responsive Login/Signup Card */}
-            <div className="order-1 lg:order-2 lg:ml-auto w-full">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 lg:p-10 xl:p-12 shadow-2xl max-w-lg w-full mx-auto">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
+            {/* Right side - Login Card - Fixed responsive sizing */}
+            <div className="order-1 lg:order-2 w-full max-w-md mx-auto lg:max-w-lg lg:ml-auto">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 xl:p-10 shadow-2xl w-full">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 text-center">
                   {config.loginTitle}
                 </h2>
 
@@ -344,9 +351,9 @@ export default function Home() {
                         Mobile Number
                       </label>
                       <div className="flex">
-                        <div className="flex items-center px-3 sm:px-4 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
-                          <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 mr-1 sm:mr-2" />
-                          <span className="text-sm sm:text-base text-gray-600">+91</span>
+                        <div className="flex items-center px-2 sm:px-3 lg:px-4 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                          <Phone className="h-4 w-4 text-gray-500 mr-1 sm:mr-2" />
+                          <span className="text-sm text-gray-600">+91</span>
                         </div>
                         <Input
                           id="phoneNumber"
@@ -354,7 +361,7 @@ export default function Home() {
                           placeholder="Your Mobile Number"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                          className="rounded-l-none border-l-0 focus:border-l text-base sm:text-lg py-3 sm:py-4 lg:py-6"
+                          className="rounded-l-none border-l-0 focus:border-l text-sm sm:text-base py-2 sm:py-3 lg:py-4"
                           disabled={isSendingOtp}
                           maxLength={10}
                           aria-label="Mobile Number"
@@ -364,13 +371,13 @@ export default function Home() {
 
                     <Button
                       onClick={handleSendOTP}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 sm:py-4 text-base sm:text-lg font-medium rounded-xl"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-medium rounded-xl"
                       disabled={phoneNumber.length !== 10 || isSendingOtp}
                       aria-live="polite"
                     >
                       {isSendingOtp ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Sending OTP...
                         </>
                       ) : (
@@ -382,20 +389,20 @@ export default function Home() {
                   <div className="space-y-4 sm:space-y-6">
                     {/* Shield Icon */}
                     <div className="flex justify-center mb-4 sm:mb-6">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-orange-100 rounded-2xl flex items-center justify-center">
-                        <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500" />
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-blue-100 rounded-2xl flex items-center justify-center">
+                        <Shield className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-600" />
                       </div>
                     </div>
 
                     {/* Verify Your Number */}
                     <div className="text-center space-y-2">
-                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Verify Your Number</h3>
-                      <p className="text-sm sm:text-base text-gray-600">Enter the 6-digit code sent to</p>
-                      <p className="text-orange-500 font-semibold text-sm sm:text-base">+91 {phoneNumber}</p>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Verify Your Number</h3>
+                      <p className="text-sm text-gray-600">Enter the 6-digit code sent to</p>
+                      <p className="text-blue-600 font-semibold text-sm">+91 {phoneNumber}</p>
                     </div>
 
-                    {/* OTP Input Boxes - Responsive */}
-                    <div className="flex justify-center space-x-2 sm:space-x-3">
+                    {/* OTP Input Boxes - Responsive sizing */}
+                    <div className="flex justify-center space-x-2">
                       {otp.map((digit, index) => (
                         <Input
                           key={index}
@@ -404,7 +411,7 @@ export default function Home() {
                           value={digit}
                           onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ""))}
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-center text-lg sm:text-xl font-semibold border-2 rounded-xl"
+                          className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-center text-sm sm:text-lg lg:text-xl font-semibold border-2 rounded-lg"
                           maxLength={1}
                           aria-label={`OTP digit ${index + 1}`}
                         />
@@ -436,12 +443,12 @@ export default function Home() {
                     <Button
                       onClick={handleVerifyOTP}
                       disabled={otp.join("").length !== 6 || !agreedToTerms || isVerifying}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 sm:py-4 text-base sm:text-lg font-medium rounded-xl"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-medium rounded-xl"
                       aria-live="polite"
                     >
                       {isVerifying ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Verifying...
                         </>
                       ) : (
@@ -456,14 +463,14 @@ export default function Home() {
                         setIsOtpSent(false)
                         setOtp(["", "", "", "", "", ""])
                       }}
-                      className="w-full py-3 sm:py-4 text-base sm:text-lg rounded-xl"
+                      className="w-full py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg rounded-xl"
                     >
                       Change Mobile Number
                     </Button>
 
                     {/* Demo OTP */}
                     <div className="text-center">
-                      <span className="inline-flex items-center bg-green-100 text-green-800 text-xs sm:text-sm px-3 py-1 rounded-full">
+                      <span className="inline-flex items-center bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                         <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                         Demo: Use OTP 123456
                       </span>
@@ -475,21 +482,21 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Overlapping Statistics Cards - Responsive */}
+        {/* Statistics Cards - Fixed responsive layout */}
         <div className="absolute bottom-0 left-0 right-0 z-20 transform translate-y-1/2">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
               {config.stats.map((stat, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div
-                    className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${stat.color} rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4`}
+                    className={`w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 ${stat.color} rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4`}
                   >
-                    <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 ${stat.iconColor}`} aria-hidden="true" />
+                    <stat.icon className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-6 lg:w-6 ${stat.iconColor}`} aria-hidden="true" />
                   </div>
-                  <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-1">
+                  <div className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-1">
                     {stat.number}
                   </div>
                   <div className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium">{stat.label}</div>
@@ -500,69 +507,71 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Spacer for overlapping cards - Responsive */}
-      <div className="h-12 sm:h-16 lg:h-20 bg-gray-50"></div>
+      {/* Spacer for overlapping cards */}
+      <div className="h-8 sm:h-12 lg:h-20 bg-gray-50"></div>
 
-      {/* How It Works Section - Responsive */}
-      <section className="py-12 sm:py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">How KaamSathi Works</h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+      {/* How It Works Section - Fixed responsive layout */}
+      <section className="py-8 sm:py-12 lg:py-16 bg-white">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-8 lg:mb-12">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+              How KaamSathi Works
+            </h2>
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
               {userIntent === "hire"
                 ? "Find and hire local workers in just 3 simple steps"
                 : "Get hired for daily wage work in just 3 simple steps"}
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {userIntent === "hire" ? (
               <>
                 <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-orange-500">1</span>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">1</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Post Your Job</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Post Your Job</h3>
                   <p className="text-sm sm:text-base text-gray-600">
                     Describe your work requirements and daily wage budget
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-blue-500">2</span>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">2</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Review Local Workers</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Review Local Workers</h3>
                   <p className="text-sm sm:text-base text-gray-600">Browse profiles of workers in your area</p>
                 </div>
-                <div className="text-center sm:col-span-2 md:col-span-1">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-green-500">3</span>
+                <div className="text-center sm:col-span-2 lg:col-span-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">3</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Hire & Pay</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Hire & Pay</h3>
                   <p className="text-sm sm:text-base text-gray-600">Connect with workers and pay for completed work</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-orange-500">1</span>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">1</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Create Profile</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Create Profile</h3>
                   <p className="text-sm sm:text-base text-gray-600">Showcase your skills and work experience</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-blue-500">2</span>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">2</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Find Local Jobs</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Find Local Jobs</h3>
                   <p className="text-sm sm:text-base text-gray-600">Browse daily wage jobs in your area</p>
                 </div>
-                <div className="text-center sm:col-span-2 md:col-span-1">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-green-500">3</span>
+                <div className="text-center sm:col-span-2 lg:col-span-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">3</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Work & Earn</h3>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">Work & Earn</h3>
                   <p className="text-sm sm:text-base text-gray-600">Complete work and receive daily payments</p>
                 </div>
               </>
@@ -571,59 +580,62 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section - Responsive */}
-      <section className="py-12 sm:py-16 bg-slate-800 text-white">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12">
+      {/* Testimonials Carousel Section */}
+      <TestimonialsCarousel />
+
+      {/* Contact Section - Fixed responsive layout */}
+      <section className="py-8 sm:py-12 lg:py-16 bg-slate-800 text-white">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
             {/* Left side - Contact Info */}
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">Get in Touch</h2>
-              <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 lg:mb-6">Get in Touch</h2>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-4 sm:mb-6 lg:mb-8">
                 Have questions? We're here to help you succeed.
               </p>
 
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {/* Email */}
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" aria-hidden="true" />
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base sm:text-lg">Email</h3>
-                    <p className="text-sm sm:text-base text-gray-300">support@kaamsathi.com</p>
+                    <h3 className="font-semibold text-sm sm:text-base lg:text-lg">Email</h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-300">support@kaamsathi.com</p>
                   </div>
                 </div>
 
                 {/* Phone */}
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-white" aria-hidden="true" />
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base sm:text-lg">Phone</h3>
-                    <p className="text-sm sm:text-base text-gray-300">+91 98765 43210</p>
+                    <h3 className="font-semibold text-sm sm:text-base lg:text-lg">Phone</h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-300">+91 98765 43210</p>
                   </div>
                 </div>
 
                 {/* Address */}
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPinIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" aria-hidden="true" />
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MapPinIcon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base sm:text-lg">Address</h3>
-                    <p className="text-sm sm:text-base text-gray-300">Mumbai, Maharashtra, India</p>
+                    <h3 className="font-semibold text-sm sm:text-base lg:text-lg">Address</h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-300">Mumbai, Maharashtra, India</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Right side - Contact Form */}
-            <div className="bg-slate-700 rounded-2xl p-6 sm:p-8">
-              <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Send us a Message</h3>
+            <div className="bg-slate-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4 lg:mb-6">Send us a Message</h3>
 
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleContactSubmit} className="space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="contact-firstName" className="sr-only">
                       First Name
@@ -633,7 +645,7 @@ export default function Home() {
                       placeholder="First Name"
                       value={contactForm.firstName}
                       onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
-                      className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 ${contactFormErrors.firstName ? "border-red-500" : ""}`}
+                      className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 text-sm sm:text-base ${contactFormErrors.firstName ? "border-red-500" : ""}`}
                       required
                       aria-invalid={!!contactFormErrors.firstName}
                       aria-describedby={contactFormErrors.firstName ? "firstName-error" : undefined}
@@ -653,7 +665,7 @@ export default function Home() {
                       placeholder="Last Name"
                       value={contactForm.lastName}
                       onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
-                      className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 ${contactFormErrors.lastName ? "border-red-500" : ""}`}
+                      className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 text-sm sm:text-base ${contactFormErrors.lastName ? "border-red-500" : ""}`}
                       required
                       aria-invalid={!!contactFormErrors.lastName}
                       aria-describedby={contactFormErrors.lastName ? "lastName-error" : undefined}
@@ -676,7 +688,7 @@ export default function Home() {
                     placeholder="Email"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 ${contactFormErrors.email ? "border-red-500" : ""}`}
+                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 text-sm sm:text-base ${contactFormErrors.email ? "border-red-500" : ""}`}
                     required
                     aria-invalid={!!contactFormErrors.email}
                     aria-describedby={contactFormErrors.email ? "email-error" : undefined}
@@ -700,7 +712,7 @@ export default function Home() {
                     onChange={(e) =>
                       setContactForm({ ...contactForm, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
                     }
-                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 ${contactFormErrors.phone ? "border-red-500" : ""}`}
+                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 text-sm sm:text-base ${contactFormErrors.phone ? "border-red-500" : ""}`}
                     required
                     maxLength={10}
                     aria-invalid={!!contactFormErrors.phone}
@@ -723,7 +735,7 @@ export default function Home() {
                     rows={4}
                     value={contactForm.message}
                     onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 ${contactFormErrors.message ? "border-red-500" : ""}`}
+                    className={`bg-slate-600 border-slate-500 text-white placeholder-gray-400 text-sm sm:text-base ${contactFormErrors.message ? "border-red-500" : ""}`}
                     required
                     aria-invalid={!!contactFormErrors.message}
                     aria-describedby={contactFormErrors.message ? "message-error" : undefined}
@@ -737,7 +749,7 @@ export default function Home() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 rounded-lg"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg text-sm sm:text-base"
                 >
                   Send Message
                 </Button>
@@ -747,42 +759,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Responsive */}
-      <footer className="bg-slate-900 text-white py-8 sm:py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
+      {/* Footer - Fixed responsive layout */}
+      <footer className="bg-slate-900 text-white py-6 sm:py-8 lg:py-12">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">K</span>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <div className="h-6 w-6 sm:h-8 sm:w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm sm:text-lg">K</span>
                 </div>
-                <span className="font-bold text-xl">Kaamsathi</span>
+                <span className="font-bold text-lg sm:text-xl">Kaamsathi</span>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-xs sm:text-sm">
                 Connecting skilled workers with employers across India. Find work or hire talent with ease.
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold mb-2 sm:mb-4 text-sm sm:text-base">Quick Links</h4>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/about" className="hover:text-white">
+                  <Link href="/about" className="hover:text-white transition-colors">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <a href="#how-it-works" className="hover:text-white">
+                  <a href="#how-it-works" className="hover:text-white transition-colors">
                     How it Works
                   </a>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-white">
+                  <Link href="/contact" className="hover:text-white transition-colors">
                     Contact
                   </Link>
                 </li>
                 <li>
-                  <a href="#support" className="hover:text-white">
+                  <a href="#support" className="hover:text-white transition-colors">
                     Support
                   </a>
                 </li>
@@ -790,20 +802,20 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold mb-2 sm:mb-4 text-sm sm:text-base">Legal</h4>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <a href="#privacy" className="hover:text-white">
+                  <a href="#privacy" className="hover:text-white transition-colors">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#terms" className="hover:text-white">
+                  <a href="#terms" className="hover:text-white transition-colors">
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="#safety" className="hover:text-white">
+                  <a href="#safety" className="hover:text-white transition-colors">
                     Safety Guidelines
                   </a>
                 </li>
@@ -811,20 +823,20 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">For Workers</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold mb-2 sm:mb-4 text-sm sm:text-base">For Workers</h4>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/find-jobs" className="hover:text-white">
+                  <Link href="/find-jobs" className="hover:text-white transition-colors">
                     Find Daily Jobs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/profile" className="hover:text-white">
+                  <Link href="/profile" className="hover:text-white transition-colors">
                     Create Profile
                   </Link>
                 </li>
                 <li>
-                  <a href="#how-it-works" className="hover:text-white">
+                  <a href="#how-it-works" className="hover:text-white transition-colors">
                     How It Works
                   </a>
                 </li>
@@ -832,7 +844,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="text-center text-gray-400 text-sm pt-6 sm:pt-8 border-t border-gray-800">
+          <div className="text-center text-gray-400 text-xs sm:text-sm pt-4 sm:pt-6 lg:pt-8 border-t border-gray-800">
             © {new Date().getFullYear()} KaamSathi. All rights reserved.
           </div>
         </div>
