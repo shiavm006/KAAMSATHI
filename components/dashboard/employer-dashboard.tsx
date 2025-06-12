@@ -8,13 +8,12 @@ import { Plus } from "lucide-react"
 import SidebarLayout from "@/components/sidebar-layout"
 import { EmployerStatsCards } from "./employer-stats-cards"
 import { CompanyProfileCard } from "./company-profile-card"
-// Note: The tab content components (e.g., JobManagementTab) would be created similarly.
-// For brevity, their content is kept inline here but should be extracted in a real app.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Eye, Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import JobPostingAnalytics from "./job-posting-analytics" // Import the new component
 
 // Mock data would ideally be moved to a central file like `data/mock-data.ts`
 const jobPostings = [
@@ -122,6 +121,9 @@ export default function EmployerDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="analytics" className="mt-6">
+            <JobPostingAnalytics />
           </TabsContent>
           {/* Other TabsContent would follow */}
         </Tabs>
