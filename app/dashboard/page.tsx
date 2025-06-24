@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import WorkerDashboard from "@/components/dashboard/worker-dashboard"
@@ -9,12 +9,22 @@ import EmployerDashboard from "@/components/dashboard/employer-dashboard"
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push("/")
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, isHydrated])
+
+  // Don't render anything until hydration is complete
+  if (!isHydrated) {
+    return null
+  }
 
   if (!user) {
     return (

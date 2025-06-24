@@ -65,8 +65,17 @@ const MOCK_USERS: User[] = [
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
 
+  // First useEffect: Mark hydration complete
   useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Second useEffect: Load user from localStorage only after hydration
+  useEffect(() => {
+    if (!isHydrated) return
+
     try {
       const savedUser = localStorage.getItem("kaamsathi-user")
       if (savedUser) {
@@ -78,19 +87,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isHydrated])
 
   const login = useCallback((userData: User) => {
     setUser(userData)
-    localStorage.setItem("kaamsathi-user", JSON.stringify(userData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("kaamsathi-user", JSON.stringify(userData))
+    }
     console.log("AuthProvider: User logged in", userData)
   }, [])
 
   const logout = useCallback(() => {
     console.log("AuthProvider: logout() called.")
     setUser(null)
-    localStorage.removeItem("kaamsathi-user")
-    localStorage.removeItem("kaamsathi-user-intent")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("kaamsathi-user")
+      localStorage.removeItem("kaamsathi-user-intent")
+    }
     console.log("AuthProvider: User logged out. localStorage cleared.")
   }, [])
 
@@ -99,7 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         const newUser = { ...user, ...updatedUserData }
         setUser(newUser)
-        localStorage.setItem("kaamsathi-user", JSON.stringify(newUser))
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("kaamsathi-user", JSON.stringify(newUser))
+        }
         console.log("AuthProvider: User data updated", newUser)
       }
     },
@@ -132,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true, user: foundUser }
     } else {
       console.log("AuthProvider: No existing user. Creating new user.")
-      const intent = localStorage.getItem("kaamsathi-user-intent") || "worker"
+      const intent = typeof window !== 'undefined' ? localStorage.getItem("kaamsathi-user-intent") || "worker" : "worker"
       const newUserRole = intent as "worker" | "employer"
 
       // Provide default values for new fields based on role

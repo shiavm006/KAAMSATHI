@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useState, useRef } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Users, Briefcase, ArrowRight, CheckCircle } from "lucide-react"
@@ -71,6 +71,9 @@ export default function UserIntentModal({ isOpen, onClose, onSelect }: UserInten
         className="w-[95vw] max-w-[800px] max-h-[95vh] p-0 gap-0 overflow-hidden rounded-2xl border-0 shadow-2xl"
         hideCloseButton
       >
+        <DialogTitle className="sr-only">
+          Choose Your Intent - आपको क्या चाहिए? What are you looking for?
+        </DialogTitle>
         <div className="sr-only" aria-live="polite">
           Use arrow keys to navigate between options and press Enter to select.
         </div>

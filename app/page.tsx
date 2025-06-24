@@ -22,6 +22,7 @@ export default function Home() {
   const router = useRouter()
   const [showIntentModal, setShowIntentModal] = useState(false)
   const [userIntent, setUserIntent] = useState<"hire" | "job" | null>(null)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   // Authentication states
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -46,6 +47,41 @@ export default function Home() {
     phone: "",
     message: "",
   })
+
+  // Hydration effect
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Always show intent modal for non-authenticated users - only after hydration
+  useEffect(() => {
+    if (!isHydrated) return
+    
+    if (!isAuthenticated) {
+      if (typeof window !== 'undefined') {
+        const savedIntent = localStorage.getItem("kaamsathi-user-intent")
+        if (savedIntent) {
+          setUserIntent(savedIntent as "hire" | "job")
+        } else {
+          // Force show the intent modal after a short delay
+          const timer = setTimeout(() => {
+            setShowIntentModal(true)
+          }, 500)
+          return () => clearTimeout(timer)
+        }
+      } else {
+        // Set a default value during SSR to prevent loading stuck state
+        setUserIntent("hire")
+      }
+    }
+  }, [isAuthenticated, isHydrated])
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.push("/dashboard")
+    }
+  }, [isAuthenticated, user, router])
 
   const validateContactForm = () => {
     const errors = { firstName: "", lastName: "", email: "", phone: "", message: "" }
@@ -105,30 +141,10 @@ export default function Home() {
     }
   }
 
-  // Always show intent modal for non-authenticated users
-  useEffect(() => {
-    if (!isAuthenticated) {
-      const savedIntent = localStorage.getItem("kaamsathi-user-intent")
-      if (savedIntent) {
-        setUserIntent(savedIntent as "hire" | "job")
-      } else {
-        const timer = setTimeout(() => {
-          setShowIntentModal(true)
-        }, 500)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [isAuthenticated])
-
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      router.push("/dashboard")
-    }
-  }, [isAuthenticated, user, router])
-
   const handleIntentSelection = (intent: "hire" | "job") => {
-    localStorage.setItem("kaamsathi-user-intent", intent)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("kaamsathi-user-intent", intent)
+    }
     setUserIntent(intent)
     setShowIntentModal(false)
   }
@@ -242,7 +258,9 @@ export default function Home() {
   }
 
   const handleChangeIntent = () => {
-    localStorage.removeItem("kaamsathi-user-intent")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("kaamsathi-user-intent")
+    }
     setUserIntent(null)
     setShowIntentModal(true)
   }
@@ -259,8 +277,8 @@ export default function Home() {
     )
   }
 
-  // Show loading state until intent is determined
-  if (!userIntent && !showIntentModal) {
+  // Show loading state until hydration is complete
+  if (!isHydrated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -313,7 +331,7 @@ export default function Home() {
       {/* Add padding to account for fixed header */}
       <div className="pt-14 sm:pt-16">
         {/* Hero Section - Fixed responsive layout */}
-        <section className="relative min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] xl:min-h-[800px] flex items-center">
+        <section className="relative min-h-[400px] xs:min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] xl:min-h-[800px] flex items-center">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
             <Image
@@ -326,36 +344,36 @@ export default function Home() {
             <div className="absolute inset-0 bg-black/40"></div>
           </div>
 
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-12 items-center min-h-[350px] xs:min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
               {/* Left side - Hero content */}
-              <div className="text-white order-2 lg:order-1 text-center lg:text-left">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+              <div className="text-white order-2 lg:order-1 text-center lg:text-left px-2 sm:px-0">
+                <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 lg:mb-6 leading-tight">
                   {config.heroTitle}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-gray-200 max-w-2xl mx-auto lg:mx-0">
+                <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 lg:mb-8 text-gray-200 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                   {config.heroSubtitle}
                 </p>
               </div>
 
               {/* Right side - Login Card with Glass Effect */}
-              <div className="order-1 lg:order-2 w-full max-w-md mx-auto lg:max-w-lg lg:ml-auto">
-                <div className="backdrop-blur-xl bg-white/90 border border-white/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 xl:p-10 shadow-2xl w-full supports-[backdrop-filter]:bg-white/80">
-                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 text-center">
+              <div className="order-1 lg:order-2 w-full max-w-sm xs:max-w-md mx-auto lg:max-w-lg lg:ml-auto px-2 sm:px-0">
+                <div className="backdrop-blur-xl bg-white/90 border border-white/30 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 xs:p-4 sm:p-6 lg:p-8 xl:p-10 shadow-2xl w-full supports-[backdrop-filter]:bg-white/80">
+                  <h2 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 xl:mb-8 text-center">
                     {config.loginTitle}
                   </h2>
 
                   {!isOtpSent ? (
-                    <div className="space-y-4 sm:space-y-6">
+                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                       {/* Mobile Number Input */}
-                      <div className="space-y-2">
-                        <label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700">
+                      <div className="space-y-1 sm:space-y-2">
+                        <label htmlFor="phoneNumber" className="text-xs sm:text-sm font-medium text-gray-700">
                           Mobile Number
                         </label>
                         <div className="flex">
                           <div className="flex items-center px-2 sm:px-3 lg:px-4 bg-gray-50/80 backdrop-blur-sm border border-r-0 border-gray-300/50 rounded-l-lg">
-                            <Phone className="h-4 w-4 text-gray-500 mr-1 sm:mr-2" />
-                            <span className="text-sm text-gray-600">+91</span>
+                            <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1 sm:mr-2" />
+                            <span className="text-xs sm:text-sm text-gray-600">+91</span>
                           </div>
                           <Input
                             id="phoneNumber"
@@ -363,7 +381,7 @@ export default function Home() {
                             placeholder="Your Mobile Number"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            className="rounded-l-none border-l-0 focus:border-l text-sm sm:text-base py-2 sm:py-3 lg:py-4 bg-white/80 backdrop-blur-sm border-gray-300/50"
+                            className="rounded-l-none border-l-0 focus:border-l text-xs sm:text-sm lg:text-base py-2 sm:py-3 lg:py-4 bg-white/80 backdrop-blur-sm border-gray-300/50 h-9 sm:h-10 lg:h-12"
                             disabled={isSendingOtp}
                             maxLength={10}
                             aria-label="Mobile Number"
@@ -371,68 +389,18 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <Button
-                        onClick={handleSendOTP}
-                        className="w-full bg-blue-600/90 hover:bg-blue-700 text-white py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-medium rounded-xl backdrop-blur-sm"
-                        disabled={phoneNumber.length !== 10 || isSendingOtp}
-                        aria-live="polite"
-                      >
-                        {isSendingOtp ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending OTP...
-                          </>
-                        ) : (
-                          "Get OTP"
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 sm:space-y-6">
-                      {/* Shield Icon */}
-                      <div className="flex justify-center mb-4 sm:mb-6">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-blue-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                          <Shield className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-600" />
-                        </div>
-                      </div>
-
-                      {/* Verify Your Number */}
-                      <div className="text-center space-y-2">
-                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Verify Your Number</h3>
-                        <p className="text-sm text-gray-600">Enter the 6-digit code sent to</p>
-                        <p className="text-blue-600 font-semibold text-sm">+91 {phoneNumber}</p>
-                      </div>
-
-                      {/* OTP Input Boxes - Responsive sizing */}
-                      <div className="flex justify-center space-x-2">
-                        {otp.map((digit, index) => (
-                          <Input
-                            key={index}
-                            id={`otp-${index}`}
-                            type="text"
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ""))}
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-center text-sm sm:text-lg lg:text-xl font-semibold border-2 rounded-lg bg-white/80 backdrop-blur-sm border-gray-300/50"
-                            maxLength={1}
-                            aria-label={`OTP digit ${index + 1}`}
-                          />
-                        ))}
-                      </div>
-
                       {/* Terms and Conditions */}
-                      <div className="flex items-start space-x-3">
+                      <div className="flex items-start space-x-2">
                         <Checkbox
                           id="terms"
                           checked={agreedToTerms}
                           onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                          className="mt-1"
-                          aria-label="Agree to terms and conditions"
+                          className="mt-0.5 h-3 w-3 sm:h-4 sm:w-4"
                         />
                         <label htmlFor="terms" className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                           I agree to the{" "}
                           <a href="#terms" className="text-blue-600 hover:underline">
-                            Terms & Conditions
+                            Terms of Service
                           </a>{" "}
                           and{" "}
                           <a href="#privacy" className="text-blue-600 hover:underline">
@@ -441,31 +409,79 @@ export default function Home() {
                         </label>
                       </div>
 
+                      {/* Send OTP Button */}
+                      <Button
+                        onClick={handleSendOTP}
+                        disabled={!phoneNumber || phoneNumber.length !== 10 || !agreedToTerms || isSendingOtp}
+                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-blue-600/90 hover:bg-blue-700 text-white shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed h-9 sm:h-10 lg:h-12"
+                      >
+                        {isSendingOtp ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                            <span>Sending...</span>
+                          </div>
+                        ) : (
+                          "Send OTP"
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+                      {/* Shield Icon */}
+                      <div className="flex justify-center mb-3 sm:mb-4 lg:mb-6">
+                        <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-blue-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                          <Shield className="h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-600" />
+                        </div>
+                      </div>
+
+                      {/* Verify Your Number */}
+                      <div className="text-center space-y-1 sm:space-y-2">
+                        <h3 className="text-base xs:text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Verify Your Number</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Enter the 6-digit code sent to</p>
+                        <p className="text-blue-600 font-semibold text-xs sm:text-sm">+91 {phoneNumber}</p>
+                      </div>
+
+                      {/* OTP Input Boxes - Responsive sizing */}
+                      <div className="flex justify-center space-x-1.5 sm:space-x-2">
+                        {otp.map((digit, index) => (
+                          <Input
+                            key={index}
+                            id={`otp-${index}`}
+                            type="text"
+                            value={digit}
+                            onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ""))}
+                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                            className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-center text-sm xs:text-base sm:text-lg lg:text-xl font-semibold border-2 rounded-lg bg-white/80 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-blue-500"
+                            maxLength={1}
+                            aria-label={`OTP digit ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+
                       {/* Verify Button */}
                       <Button
                         onClick={handleVerifyOTP}
-                        disabled={otp.join("").length !== 6 || !agreedToTerms || isVerifying}
-                        className="w-full bg-blue-600/90 hover:bg-blue-700 text-white py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-medium rounded-xl backdrop-blur-sm"
-                        aria-live="polite"
+                        disabled={otp.some((digit) => !digit) || isVerifying}
+                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-blue-600/90 hover:bg-blue-700 text-white shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed h-9 sm:h-10 lg:h-12"
                       >
                         {isVerifying ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Verifying...
-                          </>
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                            <span>Verifying...</span>
+                          </div>
                         ) : (
                           "Verify & Continue"
                         )}
                       </Button>
 
-                      {/* Change Mobile Number */}
+                      {/* Change Number Button */}
                       <Button
                         variant="outline"
                         onClick={() => {
                           setIsOtpSent(false)
                           setOtp(["", "", "", "", "", ""])
                         }}
-                        className="w-full py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg rounded-xl bg-white/80 backdrop-blur-sm border-gray-300/50"
+                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-white/80 backdrop-blur-sm border-gray-300/50 hover:bg-gray-50 h-9 sm:h-10 lg:h-12"
                       >
                         Change Mobile Number
                       </Button>
@@ -473,7 +489,7 @@ export default function Home() {
                       {/* Demo OTP */}
                       <div className="text-center">
                         <span className="inline-flex items-center bg-green-100/80 text-green-800 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1 sm:mr-2"></div>
                           Demo: Use OTP 123456
                         </span>
                       </div>
@@ -486,25 +502,25 @@ export default function Home() {
 
           {/* Statistics Cards - Fixed responsive layout */}
           <div className="absolute bottom-0 left-0 right-0 z-20 transform translate-y-1/2">
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
+            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
                 {config.stats.map((stat, index) => (
                   <div
                     key={index}
-                    className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                    className="bg-white rounded-lg sm:rounded-xl p-2 xs:p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
                     <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 ${stat.color} rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4`}
+                      className={`w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 ${stat.color} rounded-lg flex items-center justify-center mx-auto mb-1 xs:mb-2 sm:mb-3 lg:mb-4`}
                     >
                       <stat.icon
-                        className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-6 lg:w-6 ${stat.iconColor}`}
+                        className={`h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 lg:h-6 lg:w-6 ${stat.iconColor}`}
                         aria-hidden="true"
                       />
                     </div>
-                    <div className="text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-1">
+                    <div className="text-xs xs:text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                       {stat.number}
                     </div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium">{stat.label}</div>
+                    <div className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium leading-tight">{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -513,7 +529,7 @@ export default function Home() {
         </section>
 
         {/* Spacer for overlapping cards */}
-        <div className="h-8 sm:h-12 lg:h-20 bg-gray-50"></div>
+        <div className="h-6 xs:h-8 sm:h-12 lg:h-16 xl:h-20 bg-gray-50"></div>
 
         {/* How It Works Section - Fixed responsive layout */}
         <section className="py-8 sm:py-12 lg:py-16 bg-white">
