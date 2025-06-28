@@ -123,7 +123,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     console.log(`AuthProvider: Sending OTP to ${phone}...`)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
     if (phone.length !== 10 || !/^\d+$/.test(phone)) {
       return { success: false, error: "Please enter a valid 10-digit phone number." }
     }
@@ -133,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; user?: User; error?: string }> => {
     console.log(`AuthProvider: Verifying OTP ${otp} for phone ${phone}...`)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     if (otp !== "123456") {
       return { success: false, error: "Invalid OTP. Use demo OTP: 123456" }

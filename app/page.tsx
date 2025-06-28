@@ -18,7 +18,7 @@ import contentConfig from "@/config/contentConfig"
 import TestimonialsCarousel from "@/components/testimonials-carousel"
 
 export default function Home() {
-  const { isAuthenticated, user, sendOTP, verifyOTP } = useAuth()
+  const { isAuthenticated, user, loading, sendOTP, verifyOTP } = useAuth()
   const router = useRouter()
   const [showIntentModal, setShowIntentModal] = useState(false)
   const [userIntent, setUserIntent] = useState<"hire" | "job" | null>(null)
@@ -76,12 +76,13 @@ export default function Home() {
     }
   }, [isAuthenticated, isHydrated])
 
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      router.push("/dashboard")
-    }
-  }, [isAuthenticated, user, router])
+  // Optional: Redirect authenticated users to dashboard
+  // Comment out or remove this if you want authenticated users to see the home page
+  // useEffect(() => {
+  //   if (isAuthenticated && user) {
+  //     router.push("/dashboard")
+  //   }
+  // }, [isAuthenticated, user, router])
 
   const validateContactForm = () => {
     const errors = { firstName: "", lastName: "", email: "", phone: "", message: "" }
@@ -265,25 +266,26 @@ export default function Home() {
     setShowIntentModal(true)
   }
 
-  // Don't render the landing page if user is authenticated
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show loading state until hydration is complete
-  if (!isHydrated) {
+  // Show loading only while auth is being determined
+  if (loading || !isHydrated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading KaamSathi...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the landing page if user is authenticated (redirect handled elsewhere)
+  if (isAuthenticated) {
+    router.push("/dashboard")
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Redirecting to dashboard...</p>
         </div>
       </div>
     )
