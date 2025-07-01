@@ -3,8 +3,8 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
+// This interface now correctly matches the backend's User model
 export interface User {
-  // Exporting User interface
   id: string
   name: string
   phone: string
@@ -12,11 +12,9 @@ export interface User {
   avatar?: string
   email?: string
   location?: string
-  // Worker specific
   skills?: string[]
   bio?: string
-  experience?: string // e.g., "2 years", "5+ years"
-  // Employer specific
+  experience?: string
   companyName?: string
   companyWebsite?: string
   companyDescription?: string
@@ -24,89 +22,69 @@ export interface User {
 
 interface AuthContextType {
   user: User | null
+  token: string | null
   isAuthenticated: boolean
   loading: boolean
   sendOTP: (phone: string) => Promise<{ success: boolean; error?: string }>
-  verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; user?: User; error?: string }>
-  updateUser: (updatedUserData: Partial<User>) => void // Add updateUser
+  verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>
+  updateUser: (updatedUserData: Partial<User>) => void
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const MOCK_USERS: User[] = [
-  {
-    id: "user-worker-1",
-    name: "Rajesh Kumar",
-    phone: "9876543210",
-    role: "worker",
-    avatar: "/placeholder-user.jpg",
-    email: "rajesh.k@example.com",
-    skills: ["Construction", "Plumbing", "Painting"],
-    location: "Mumbai, Maharashtra",
-    bio: "Hardworking and reliable construction worker with 5 years of experience in residential and commercial projects. Proficient in plumbing and painting.",
-    experience: "5 years",
-  },
-  {
-    id: "user-employer-1",
-    name: "Priya Sharma",
-    phone: "9876543211",
-    role: "employer",
-    avatar: "/placeholder-user.jpg",
-    email: "priya.s@example.com",
-    location: "Delhi, NCR",
-    companyName: "BuildWell Constructions",
-    companyWebsite: "https://buildwell.example.com",
-    companyDescription:
-      "Leading construction firm specializing in sustainable building practices. We are always looking for skilled workers to join our team.",
-  },
-]
+// We will no longer need MOCK_USERS
+// const MOCK_USERS: User[] = [ ... ]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // First useEffect: Mark hydration complete
   useEffect(() => {
     setIsHydrated(true)
   }, [])
 
-  // Second useEffect: Load user from localStorage only after hydration
+  // Load user and token from localStorage after hydration
   useEffect(() => {
     if (!isHydrated) return
 
     try {
+      const savedToken = localStorage.getItem("kaamsathi-token")
       const savedUser = localStorage.getItem("kaamsathi-user")
-      if (savedUser) {
+      
+      if (savedToken && savedUser) {
+        setToken(savedToken)
         setUser(JSON.parse(savedUser))
       }
     } catch (error) {
-      console.error("AuthProvider: Failed to parse user from localStorage", error)
-      localStorage.removeItem("kaamsathi-user")
+      console.error("AuthProvider: Failed to load auth state from localStorage", error)
+      localStorage.clear()
     } finally {
       setLoading(false)
     }
   }, [isHydrated])
 
-  const login = useCallback((userData: User) => {
+  const login = useCallback((userData: User, userToken: string) => {
     setUser(userData)
+    setToken(userToken)
     if (typeof window !== 'undefined') {
       localStorage.setItem("kaamsathi-user", JSON.stringify(userData))
+      localStorage.setItem("kaamsathi-token", userToken)
     }
-    console.log("AuthProvider: User logged in", userData)
   }, [])
 
   const logout = useCallback(() => {
-    console.log("AuthProvider: logout() called.")
     setUser(null)
+    setToken(null)
     if (typeof window !== 'undefined') {
       localStorage.removeItem("kaamsathi-user")
+      localStorage.removeItem("kaamsathi-token")
       localStorage.removeItem("kaamsathi-user-intent")
     }
-    console.log("AuthProvider: User logged out. localStorage cleared.")
   }, [])
-
+  
   const updateUser = useCallback(
     (updatedUserData: Partial<User>) => {
       if (user) {
@@ -115,60 +93,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
           localStorage.setItem("kaamsathi-user", JSON.stringify(newUser))
         }
-        console.log("AuthProvider: User data updated", newUser)
       }
     },
     [user],
   )
 
   const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
-    console.log(`AuthProvider: Sending OTP to ${phone}...`)
-    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
-      return { success: false, error: "Please enter a valid 10-digit phone number." }
-    }
-    console.log(`AuthProvider: Demo OTP for ${phone} is 123456.`)
-    return { success: true }
-  }
-
-  const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; user?: User; error?: string }> => {
-    console.log(`AuthProvider: Verifying OTP ${otp} for phone ${phone}...`)
-
-    if (otp !== "123456") {
-      return { success: false, error: "Invalid OTP. Use demo OTP: 123456" }
-    }
-
-    const foundUser = MOCK_USERS.find((u) => u.phone === phone)
-
-    if (foundUser) {
-      console.log("AuthProvider: Existing user found.")
-      login(foundUser)
-      return { success: true, user: foundUser }
-    } else {
-      console.log("AuthProvider: No existing user. Creating new user.")
-      const intent = typeof window !== 'undefined' ? localStorage.getItem("kaamsathi-user-intent") || "worker" : "worker"
-      const newUserRole = intent as "worker" | "employer"
-
-      // Provide default values for new fields based on role
-      const newUser: User = {
-        id: `user-new-${Date.now()}`,
-        name: `New User ${phone.slice(-4)}`,
-        phone,
-        role: newUserRole,
-        avatar: "/placeholder-user.jpg",
-        email: "",
-        location: "",
-        ...(newUserRole === "worker" && { skills: [], bio: "", experience: "" }),
-        ...(newUserRole === "employer" && { companyName: "", companyWebsite: "", companyDescription: "" }),
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    try {
+      const response = await fetch(`${apiUrl}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to send OTP' };
       }
-      login(newUser)
-      return { success: true, user: newUser }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: "Cannot connect to the server." };
     }
   }
 
-  const isAuthenticated = !loading && !!user
+  const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; error?: string }> => {
+    const role = localStorage.getItem("kaamsathi-user-intent") || "worker";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    try {
+      const response = await fetch(`${apiUrl}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp, role }),
+      });
+      
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to verify OTP' };
+      }
+      
+      const { token: userToken, user: userData } = data.data;
+      if (userData && userToken) {
+        login(userData, userToken);
+        return { success: true };
+      } else {
+        return { success: false, error: "Invalid user data from server." }
+      }
+    } catch (error) {
+      return { success: false, error: "Cannot connect to the server." };
+    }
+  }
+
+  const isAuthenticated = !loading && !!user && !!token
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, sendOTP, verifyOTP, updateUser, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated, loading, sendOTP, verifyOTP, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   )
