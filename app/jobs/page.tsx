@@ -9,8 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Briefcase, Bell, TrendingUp, Bookmark, Eye, Users, Calendar, AlertCircle } from "lucide-react"
-import { mockJobs } from "@/data/mock-data"
+import { Search, Briefcase, Bell, TrendingUp, Bookmark, Eye, Users, Calendar, AlertCircle, Loader2 } from "lucide-react"
+import api, { type Job } from "@/services/api"
 import JobCard from "@/components/job-card"
 import RecommendedJobs from "@/components/recommended-jobs"
 import SavedJobs from "@/components/saved-jobs"
@@ -26,57 +26,67 @@ export default function JobsPage() {
   const [location, setLocation] = useState("")
   const [jobType, setJobType] = useState("")
   const [sortBy, setSortBy] = useState("relevance")
-  const [filteredJobs, setFilteredJobs] = useState(mockJobs)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalJobs: 0,
+    hasNext: false,
+    hasPrev: false
+  })
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/login")
+      router.push("/")
     }
   }, [isAuthenticated, router])
 
+  // Fetch jobs from API
+  const fetchJobs = async (page = 1) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params = {
+        page,
+        limit: 20,
+        search: searchTerm || undefined,
+        city: location && location !== "all" ? location : undefined,
+        type: jobType && jobType !== "all" ? jobType : undefined,
+        sortBy: sortBy === "relevance" ? "createdAt" : sortBy,
+        sortOrder: sortBy === "salary" ? "desc" : "desc"
+      }
+
+      const response = await api.jobs.getAll(params)
+      
+      if (response.status === 'success' && response.data) {
+        setJobs(response.data.jobs)
+        setPagination(response.data.pagination)
+      } else {
+        throw new Error(response.message || 'Failed to fetch jobs')
+      }
+    } catch (err: any) {
+      console.error('Error fetching jobs:', err)
+      setError(err.message || 'Failed to load jobs')
+      setJobs([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Initial load and reload when filters change
   useEffect(() => {
-    let results = [...mockJobs]
-
-    // Apply filters
-    if (searchTerm) {
-      results = results.filter(
-        (job) =>
-          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+    if (isAuthenticated) {
+      fetchJobs(1)
     }
+  }, [isAuthenticated, searchTerm, location, jobType, sortBy])
 
-    if (location) {
-      results = results.filter((job) => job.location.includes(location))
-    }
-
-    if (jobType) {
-      results = results.filter((job) => job.type === jobType)
-    }
-
-    // Sort results
-    switch (sortBy) {
-      case "date":
-        results.sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime())
-        break
-      case "salary_high":
-        results.sort((a, b) => {
-          const aMatch = a.salary.match(/₹(\d+,?\d*)/)
-          const bMatch = b.salary.match(/₹(\d+,?\d*)/)
-          const aValue = aMatch ? Number.parseInt(aMatch[1].replace(",", "")) : 0
-          const bValue = bMatch ? Number.parseInt(bMatch[1].replace(",", "")) : 0
-          return bValue - aValue
-        })
-        break
-      case "relevance":
-      default:
-        // Keep original order for relevance
-        break
-    }
-
-    setFilteredJobs(results)
-  }, [searchTerm, location, jobType, sortBy])
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    fetchJobs(page)
+  }
 
   if (!user) {
     return null
@@ -162,6 +172,8 @@ export default function JobsPage() {
                         <SelectItem value="Bangalore">Bangalore</SelectItem>
                         <SelectItem value="Chennai">Chennai</SelectItem>
                         <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                        <SelectItem value="Pune">Pune</SelectItem>
+                        <SelectItem value="Kolkata">Kolkata</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={jobType} onValueChange={setJobType}>
@@ -170,10 +182,11 @@ export default function JobsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="Full-time">Full-time</SelectItem>
-                        <SelectItem value="Part-time">Part-time</SelectItem>
-                        <SelectItem value="Contract">Contract</SelectItem>
-                        <SelectItem value="Temporary">Temporary</SelectItem>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="temporary">Temporary</SelectItem>
+                        <SelectItem value="hourly">Hourly</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={setSortBy}>
@@ -183,7 +196,7 @@ export default function JobsPage() {
                       <SelectContent>
                         <SelectItem value="relevance">Relevance</SelectItem>
                         <SelectItem value="date">Date (newest)</SelectItem>
-                        <SelectItem value="salary_high">Salary (high to low)</SelectItem>
+                        <SelectItem value="salary">Salary (high to low)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -198,7 +211,9 @@ export default function JobsPage() {
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{filteredJobs.length}</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                        {loading ? "..." : pagination.totalJobs}
+                      </p>
                       <p className="text-xs sm:text-sm text-gray-600 truncate">Jobs Available</p>
                     </div>
                   </div>
@@ -231,7 +246,13 @@ export default function JobsPage() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">24</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                        {jobs.filter(job => {
+                          const today = new Date()
+                          const jobDate = new Date(job.createdAt)
+                          return today.getTime() - jobDate.getTime() < 24 * 60 * 60 * 1000
+                        }).length}
+                      </p>
                       <p className="text-xs sm:text-sm text-gray-600 truncate">New Today</p>
                     </div>
                   </div>
@@ -246,15 +267,68 @@ export default function JobsPage() {
                   {searchTerm || location || jobType ? "Search Results" : "Latest Jobs"}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600">
-                  {filteredJobs.length} {filteredJobs.length === 1 ? "job" : "jobs"} found
+                  {loading ? "Loading..." : `${pagination.totalJobs} ${pagination.totalJobs === 1 ? "job" : "jobs"} found`}
                 </p>
               </div>
 
-              {filteredJobs.length > 0 ? (
+              {loading ? (
+                <Card className="shadow-sm">
+                  <CardContent className="p-6 sm:p-8 lg:p-12 text-center">
+                    <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 text-blue-500 mx-auto mb-3 sm:mb-4 animate-spin" />
+                    <h3 className="text-base sm:text-lg font-medium mb-2">Loading jobs...</h3>
+                    <p className="text-sm sm:text-base text-gray-500">Please wait while we fetch the latest opportunities</p>
+                  </CardContent>
+                </Card>
+              ) : error ? (
+                <Card className="shadow-sm">
+                  <CardContent className="p-6 sm:p-8 lg:p-12 text-center">
+                    <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-400 mx-auto mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium mb-2">Failed to load jobs</h3>
+                    <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4 max-w-md mx-auto">
+                      {error}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchJobs(1)}
+                      className="text-xs sm:text-sm"
+                    >
+                      Try Again
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : jobs.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                  {filteredJobs.map((job) => (
+                  {jobs.map((job) => (
                     <JobCard key={job.id} job={job} />
                   ))}
+                  
+                  {/* Pagination */}
+                  {pagination.totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={!pagination.hasPrev}
+                        className="text-xs sm:text-sm"
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-xs sm:text-sm text-gray-600 px-3">
+                        Page {pagination.currentPage} of {pagination.totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={!pagination.hasNext}
+                        className="text-xs sm:text-sm"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Card className="shadow-sm">

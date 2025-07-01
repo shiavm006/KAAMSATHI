@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import api from "../services/api"
 
 // This interface now correctly matches the backend's User model
 export interface User {
@@ -11,13 +12,15 @@ export interface User {
   role: "worker" | "employer"
   avatar?: string
   email?: string
-  location?: string
+  location?: any
   skills?: string[]
   bio?: string
   experience?: string
   companyName?: string
   companyWebsite?: string
   companyDescription?: string
+  rating?: { average: number; count: number }
+  isVerified?: boolean
 }
 
 interface AuthContextType {
@@ -26,9 +29,10 @@ interface AuthContextType {
   isAuthenticated: boolean
   loading: boolean
   sendOTP: (phone: string) => Promise<{ success: boolean; error?: string }>
-  verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>
+  verifyOTP: (phone: string, otp: string, role?: string, name?: string) => Promise<{ success: boolean; error?: string }>
   updateUser: (updatedUserData: Partial<User>) => void
   logout: () => void
+  refreshToken: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -57,11 +61,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedToken && savedUser) {
         setToken(savedToken)
         setUser(JSON.parse(savedUser))
+        
+        // Verify token is still valid by fetching current user
+        api.auth.getMe()
+          .then((response) => {
+            if (response.status === 'success' && response.data?.user) {
+              setUser(response.data.user)
+              localStorage.setItem("kaamsathi-user", JSON.stringify(response.data.user))
+            }
+          })
+          .catch((error) => {
+            console.error("Token validation failed:", error)
+            // Token is invalid, clear auth state
+            logout()
+          })
+          .finally(() => {
+            setLoading(false)
+          })
+      } else {
+        setLoading(false)
       }
     } catch (error) {
       console.error("AuthProvider: Failed to load auth state from localStorage", error)
       localStorage.clear()
-    } finally {
       setLoading(false)
     }
   }, [isHydrated])
@@ -75,13 +97,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    setUser(null)
-    setToken(null)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem("kaamsathi-user")
-      localStorage.removeItem("kaamsathi-token")
-      localStorage.removeItem("kaamsathi-user-intent")
+  const logout = useCallback(async () => {
+    try {
+      // Call backend logout (to handle token blacklisting if implemented)
+      await api.auth.logout()
+    } catch (error) {
+      console.error("Logout API call failed:", error)
+    } finally {
+      // Clear local state regardless of API call result
+      setUser(null)
+      setToken(null)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("kaamsathi-user")
+        localStorage.removeItem("kaamsathi-token")
+        localStorage.removeItem("kaamsathi-user-intent")
+      }
     }
   }, [])
   
@@ -99,55 +129,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     try {
-      const response = await fetch(`${apiUrl}/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      });
-      const data = await response.json();
-      if (!data.success) {
-        return { success: false, error: data.error || 'Failed to send OTP' };
+      const response = await api.auth.sendOTP(phone)
+      
+      if (response.status === 'success') {
+        return { success: true }
+      } else {
+        return { success: false, error: response.message || 'Failed to send OTP' }
       }
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: "Cannot connect to the server." };
+    } catch (error: any) {
+      console.error("Send OTP error:", error)
+      return { success: false, error: error.message || "Cannot connect to the server." }
     }
   }
 
-  const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; error?: string }> => {
-    const role = localStorage.getItem("kaamsathi-user-intent") || "worker";
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const verifyOTP = async (
+    phone: string, 
+    otp: string, 
+    role?: string, 
+    name?: string
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch(`${apiUrl}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp, role }),
-      });
+      const userRole = role || localStorage.getItem("kaamsathi-user-intent") || "worker"
+      const response = await api.auth.verifyOTP(phone, otp, userRole, name)
       
-      const data = await response.json();
-
-      if (!data.success) {
-        return { success: false, error: data.error || 'Failed to verify OTP' };
-      }
-      
-      const { token: userToken, user: userData } = data.data;
-      if (userData && userToken) {
-        login(userData, userToken);
-        return { success: true };
+      if (response.status === 'success' && response.data) {
+        const { token: userToken, user: userData } = response.data
+        if (userData && userToken) {
+          login(userData, userToken)
+          // Clear user intent after successful login
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem("kaamsathi-user-intent")
+          }
+          return { success: true }
+        } else {
+          return { success: false, error: "Invalid user data from server." }
+        }
       } else {
-        return { success: false, error: "Invalid user data from server." }
+        return { success: false, error: response.message || 'Failed to verify OTP' }
+      }
+    } catch (error: any) {
+      console.error("Verify OTP error:", error)
+      return { success: false, error: error.message || "Cannot connect to the server." }
+    }
+  }
+
+  const refreshToken = async (): Promise<void> => {
+    try {
+      const response = await api.auth.refreshToken()
+      
+      if (response.status === 'success' && response.data?.token) {
+        setToken(response.data.token)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("kaamsathi-token", response.data.token)
+        }
+      } else {
+        throw new Error("Failed to refresh token")
       }
     } catch (error) {
-      return { success: false, error: "Cannot connect to the server." };
+      console.error("Token refresh failed:", error)
+      logout() // Force logout if refresh fails
     }
   }
 
   const isAuthenticated = !loading && !!user && !!token
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, loading, sendOTP, verifyOTP, updateUser, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      isAuthenticated, 
+      loading, 
+      sendOTP, 
+      verifyOTP, 
+      updateUser, 
+      logout,
+      refreshToken
+    }}>
       {children}
     </AuthContext.Provider>
   )

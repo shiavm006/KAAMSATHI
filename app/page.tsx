@@ -31,6 +31,8 @@ export default function Home() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [userName, setUserName] = useState("")
+  const [showNameInput, setShowNameInput] = useState(false)
 
   // Contact form states
   const [contactForm, setContactForm] = useState({
@@ -232,20 +234,54 @@ export default function Home() {
       return
     }
 
+    if (!userIntent) {
+      toast({
+        title: "Role Selection Required",
+        description: "Please select whether you're looking for work or hiring",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check if name is required for new users
+    if (showNameInput && !userName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name to complete registration",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsVerifying(true)
     try {
-      const result = await verifyOTP(phoneNumber, otpString)
+      // Convert user intent to role
+      const role = userIntent === "job" ? "worker" : "employer"
+      
+      const result = await verifyOTP(phoneNumber, otpString, role, userName.trim() || undefined)
       if (result.success) {
         toast({
-          title: "Login Successful",
-          description: `Welcome ${result.user?.name || "to KaamSathi"}!`,
+          title: "Welcome to KaamSathi!",
+          description: userName ? `Account created successfully!` : `Login successful!`,
         })
+        // Redirect will be handled by the auth context
+        router.push("/dashboard")
       } else {
-        toast({
-          title: "Verification Failed",
-          description: result.error || "Invalid OTP. Please try again.",
-          variant: "destructive",
-        })
+        // Check if error indicates new user needs name
+        if (result.error?.includes("Name is required")) {
+          setShowNameInput(true)
+          toast({
+            title: "Name Required",
+            description: "Please enter your name to complete registration",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Verification Failed",
+            description: result.error || "Invalid OTP. Please try again.",
+            variant: "destructive",
+          })
+        }
       }
     } catch (error) {
       toast({
@@ -442,6 +478,26 @@ export default function Home() {
                         <p className="text-xs sm:text-sm text-gray-600">Enter the 6-digit code sent to</p>
                         <p className="text-blue-600 font-semibold text-xs sm:text-sm">+91 {phoneNumber}</p>
                       </div>
+
+                      {/* Name Input for New Users */}
+                      {showNameInput && (
+                        <div className="space-y-1 sm:space-y-2">
+                          <label htmlFor="userName" className="text-xs sm:text-sm font-medium text-gray-700">
+                            Full Name *
+                          </label>
+                          <Input
+                            id="userName"
+                            type="text"
+                            placeholder="Enter your full name"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            className="text-xs sm:text-sm lg:text-base py-2 sm:py-3 lg:py-4 bg-white/80 backdrop-blur-sm border-gray-300/50 h-9 sm:h-10 lg:h-12"
+                            maxLength={50}
+                            aria-label="Full Name"
+                          />
+                          <p className="text-xs text-gray-500">This will be used for your profile</p>
+                        </div>
+                      )}
 
                       {/* OTP Input Boxes - Responsive sizing */}
                       <div className="flex justify-center space-x-1.5 sm:space-x-2">
